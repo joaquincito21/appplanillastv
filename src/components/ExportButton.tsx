@@ -13,7 +13,7 @@ export default function ExportButton({ registros, totales, nroPlanilla, fechaRen
   const handleExport = () => {
     const headers = [
       '#', 'Fecha Cobro', 'N° Recibo', 'Nombre y Apellido', 'N° Factura', 'Instancia',
-      'Cobrado P/ Castillo', 'Hon. %', 'Honorarios', 'Total Cobrado', 'Cuotas', 'Observación'
+      'Cobrado P/ Castillo', 'Hon. %', 'Honorarios', 'Total Cobrado', 'Cuotas', 'Observacion'
     ];
 
     const rows = registros.map((r, i) => [
@@ -38,7 +38,7 @@ export default function ExportButton({ registros, totales, nroPlanilla, fechaRen
     };
 
     const csv = [
-      `Planilla N°: ${nroPlanilla};Fecha de Rendición: ${fechaRendicion}`,
+      `Planilla N°: ${nroPlanilla};Fecha de Rendicion: ${fechaRendicion}`,
       '',
       headers.join(';'),
       ...rows.map(r => r.map(escape).join(';')),
@@ -61,11 +61,7 @@ export default function ExportButton({ registros, totales, nroPlanilla, fechaRen
     <button
       onClick={handleExport}
       disabled={registros.length === 0}
-      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg
-        border border-slate-700/80 bg-slate-900/60 text-slate-300 text-sm font-medium
-        hover:border-gold-600/50 hover:text-gold-400 hover:bg-slate-800/50
-        disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-700
-        transition-all duration-200"
+      className="btn-secondary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-navy-600 disabled:hover:text-cream-200"
     >
       <Download className="w-4 h-4" />
       Exportar CSV

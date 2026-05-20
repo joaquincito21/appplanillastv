@@ -16,31 +16,33 @@ const cards = (totales: Totales, count: number) => [
 
 export default function TotalesBar({ totales, count }: Props) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards(totales, count).map(item => {
         const Icon = item.icon;
         return (
           <div
             key={item.label}
-            className={`card p-4 sm:p-5 transition-all duration-200 ${
+            className={`rounded-xl p-5 transition-all duration-300 ${
               item.highlight
-                ? 'border-gold-600/40 bg-gradient-to-br from-gold-500/10 to-transparent shadow-glow'
-                : 'hover:border-slate-700'
+                ? 'bg-gradient-to-br from-gold-400 to-gold-500 shadow-glow'
+                : 'bg-navy-800/60 border border-navy-700/60 hover:border-navy-600'
             }`}
           >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <p className={`text-xs font-semibold uppercase tracking-wider ${
+                item.highlight ? 'text-navy-900/70' : 'text-cream-400'
+              }`}>
                 {item.label}
               </p>
               <Icon
-                className={`w-4 h-4 shrink-0 ${
-                  item.highlight ? 'text-gold-400' : 'text-slate-600'
+                className={`w-5 h-5 ${
+                  item.highlight ? 'text-navy-900/60' : 'text-navy-600'
                 }`}
               />
             </div>
             <p
-              className={`text-lg sm:text-xl font-bold tabular-nums tracking-tight ${
-                item.highlight ? 'text-gold-400' : 'text-white'
+              className={`text-2xl font-bold tabular-nums tracking-tight ${
+                item.highlight ? 'text-navy-950' : 'text-cream-100'
               }`}
             >
               {item.value}

@@ -8,82 +8,134 @@
   }
 
   body {
-    @apply bg-slate-950 text-slate-100 font-sans;
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 160, 23, 0.08), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(30, 59, 110, 0.15), transparent);
+    @apply bg-navy-950 text-slate-100 font-sans;
     min-height: 100vh;
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-slate-900;
+    @apply bg-navy-900;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full;
+    @apply bg-navy-700 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-600;
+    @apply bg-navy-600;
   }
 }
 
 @layer components {
+  /* Form Card - estilo crema como el sitio de referencia */
+  .form-card {
+    @apply rounded-2xl bg-cream-100 border border-cream-300/50 shadow-card;
+  }
+
+  .form-card-hover {
+    @apply hover:shadow-card-hover transition-shadow duration-300;
+  }
+
+  /* Input fields con estilo refinado */
   .input-field {
-    @apply w-full rounded-lg border border-slate-700/80 bg-slate-900/80 text-slate-100
-      px-3.5 py-2.5 text-sm placeholder-slate-600
+    @apply w-full rounded-lg border border-cream-400/60 bg-white/80 text-navy-800
+      px-4 py-3 text-sm placeholder-navy-400/50
       transition-all duration-200
-      focus:outline-none focus:border-gold-500/60 focus:ring-2 focus:ring-gold-500/15;
+      focus:outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20
+      shadow-input;
+  }
+
+  .input-field-dark {
+    @apply w-full rounded-lg border border-navy-700/80 bg-navy-800/80 text-cream-100
+      px-4 py-3 text-sm placeholder-navy-400
+      transition-all duration-200
+      focus:outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20;
   }
 
   .input-error {
-    @apply border-red-500/70 focus:border-red-500 focus:ring-red-500/15;
+    @apply border-red-400 focus:border-red-500 focus:ring-red-400/20;
   }
 
+  /* Botones */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
-      bg-gradient-to-r from-gold-500 to-gold-600 text-slate-950 font-semibold text-sm
-      shadow-lg shadow-gold-900/20
-      hover:from-gold-400 hover:to-gold-500 hover:shadow-gold-800/30
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
+      bg-gradient-to-r from-gold-400 to-gold-500 text-navy-950 font-semibold text-sm
+      shadow-lg shadow-gold-400/20
+      hover:from-gold-300 hover:to-gold-400 hover:shadow-gold-400/30
       active:scale-[0.98] transition-all duration-200;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
-      border border-slate-600/80 text-slate-300 text-sm font-medium
-      hover:border-slate-500 hover:text-white hover:bg-slate-800/50
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
+      border border-navy-600 text-cream-200 text-sm font-medium
+      bg-navy-800/50
+      hover:border-gold-400/50 hover:text-gold-400 hover:bg-navy-800
       transition-all duration-200;
   }
 
   .btn-icon {
-    @apply p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors;
+    @apply p-2.5 rounded-lg text-cream-300 hover:text-gold-400 hover:bg-navy-700/50 transition-all duration-200;
   }
 
+  /* Cards oscuras */
   .card {
-    @apply rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-sm;
+    @apply rounded-xl border border-navy-700/60 bg-navy-800/60 backdrop-blur-sm;
   }
 
+  .card-elevated {
+    @apply rounded-xl border border-navy-700/40 bg-navy-800/80 backdrop-blur-sm shadow-card;
+  }
+
+  /* Modales */
   .modal-overlay {
     @apply fixed inset-0 z-50 flex items-center justify-center
-      bg-slate-950/70 backdrop-blur-md p-4;
+      bg-navy-950/80 backdrop-blur-md p-4;
   }
 
   .modal-panel {
-    @apply w-full rounded-2xl border border-slate-700/60 bg-slate-900/95
-      shadow-2xl shadow-black/40 overflow-hidden;
+    @apply w-full rounded-2xl border border-navy-700/40 bg-navy-900
+      shadow-2xl shadow-black/50 overflow-hidden;
   }
 
   .modal-header {
     @apply flex items-center justify-between px-6 py-5
-      border-b border-slate-800/80 bg-slate-900/50;
+      border-b border-navy-700/60 bg-navy-800/50;
   }
 
   .modal-footer {
-    @apply flex justify-end gap-3 px-6 py-4 border-t border-slate-800/80 bg-slate-900/30;
+    @apply flex justify-end gap-3 px-6 py-4 border-t border-navy-700/60 bg-navy-800/30;
+  }
+
+  /* Badge de seccion numerada */
+  .section-badge {
+    @apply inline-flex items-center justify-center w-7 h-7 rounded-full 
+      bg-gold-400 text-navy-950 text-sm font-bold;
+  }
+
+  /* Labels refinados */
+  .form-label {
+    @apply text-sm font-medium text-navy-700 mb-2 block;
+  }
+
+  .form-label-light {
+    @apply text-xs font-medium text-cream-300 uppercase tracking-wider mb-2 block;
+  }
+
+  /* Tabs */
+  .tab-button {
+    @apply px-6 py-4 text-sm font-semibold uppercase tracking-wider
+      transition-all duration-200;
+  }
+
+  .tab-button-active {
+    @apply bg-cream-100 text-navy-800 border-b-2 border-gold-400;
+  }
+
+  .tab-button-inactive {
+    @apply bg-navy-700/50 text-cream-300 hover:bg-navy-700 hover:text-cream-100;
   }
 }

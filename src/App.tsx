@@ -60,20 +60,21 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-navy-950">
       <Header
         nroPlanilla={datos.nroPlanilla}
         fechaRendicion={datos.fechaRendicion}
         onChange={(f, v) => setDatos(f, v)}
       />
 
-      <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <main className="max-w-screen-xl mx-auto px-6 py-8 space-y-6">
+        {/* Barra de controles */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
           <InstanciaSelector
             active={datos.instanciaFiltro}
             onChange={v => setDatos('instanciaFiltro', v)}
           />
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             <ExportButton
               registros={filtrados}
               totales={totales}
@@ -87,8 +88,10 @@ export default function App() {
           </div>
         </div>
 
+        {/* Totales */}
         <TotalesBar totales={totales} count={filtrados.length} />
 
+        {/* Tabla */}
         <TablaCobranzas
           registros={filtrados}
           onEdit={r => setModal({ open: true, registro: r })}
@@ -96,6 +99,7 @@ export default function App() {
         />
       </main>
 
+      {/* Modal de registro */}
       {modal.open && (
         <ModalRegistro
           initial={modal.registro}
@@ -105,16 +109,17 @@ export default function App() {
         />
       )}
 
+      {/* Modal de confirmacion de eliminacion */}
       {deleteConfirm && (
         <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
           <div
             className="modal-panel max-w-md"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-6">
-              <h3 className="text-white font-semibold text-lg mb-2">Eliminar registro</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Esta acción es irreversible. ¿Confirmás la eliminación?
+            <div className="p-6 bg-cream-100">
+              <h3 className="text-navy-900 font-bold text-lg mb-2">Eliminar registro</h3>
+              <p className="text-navy-600 text-sm leading-relaxed">
+                Esta accion es irreversible. Confirmas la eliminacion?
               </p>
             </div>
             <div className="modal-footer">
@@ -123,8 +128,8 @@ export default function App() {
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-5 py-2.5 rounded-lg bg-red-600/90 text-white font-semibold text-sm
-                  hover:bg-red-500 transition-all"
+                className="px-5 py-2.5 rounded-lg bg-red-500 text-white font-semibold text-sm
+                  hover:bg-red-600 active:scale-[0.98] transition-all"
               >
                 Eliminar
               </button>
