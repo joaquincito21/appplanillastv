@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 160, 23, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(30, 59, 110, 0.15), transparent);
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-600;
+  }
+}
+
+@layer components {
+  .input-field {
+    @apply w-full rounded-lg border border-slate-700/80 bg-slate-900/80 text-slate-100
+      px-3.5 py-2.5 text-sm placeholder-slate-600
+      transition-all duration-200
+      focus:outline-none focus:border-gold-500/60 focus:ring-2 focus:ring-gold-500/15;
+  }
+
+  .input-error {
+    @apply border-red-500/70 focus:border-red-500 focus:ring-red-500/15;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
+      bg-gradient-to-r from-gold-500 to-gold-600 text-slate-950 font-semibold text-sm
+      shadow-lg shadow-gold-900/20
+      hover:from-gold-400 hover:to-gold-500 hover:shadow-gold-800/30
+      active:scale-[0.98] transition-all duration-200;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+      border border-slate-600/80 text-slate-300 text-sm font-medium
+      hover:border-slate-500 hover:text-white hover:bg-slate-800/50
+      transition-all duration-200;
+  }
+
+  .btn-icon {
+    @apply p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors;
+  }
+
+  .card {
+    @apply rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-sm;
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center
+      bg-slate-950/70 backdrop-blur-md p-4;
+  }
+
+  .modal-panel {
+    @apply w-full rounded-2xl border border-slate-700/60 bg-slate-900/95
+      shadow-2xl shadow-black/40 overflow-hidden;
+  }
+
+  .modal-header {
+    @apply flex items-center justify-between px-6 py-5
+      border-b border-slate-800/80 bg-slate-900/50;
+  }
+
+  .modal-footer {
+    @apply flex justify-end gap-3 px-6 py-4 border-t border-slate-800/80 bg-slate-900/30;
+  }
+}
