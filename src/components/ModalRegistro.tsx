@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X, Save } from 'lucide-react';
 import { Instancia, RegistroCobranza, DatosGenerales } from '../types';
-import { calcHonorarios, calcTotalCobrado, newId } from '../utils';
+import { calcHonorarios, calcTotalCobrado, formatDNI, newId, parseDNI } from '../utils';
 import ARNumberInput from './ARNumberInput';
 
 interface Props {
@@ -31,6 +31,7 @@ const empty = (
   fechaCobro: '',
   nroRecibo: '',
   nombreApellido: '',
+  dni: '',
   nroFactura: '',
   instancia: instanciaPorFiltro(filtro),
   cobradoCastillo: 0,
@@ -50,7 +51,7 @@ export default function ModalRegistro({ initial, instanciaFiltro, onSave, onClos
     if (initial) {
       const instancia =
         instanciaFiltro === 'todas' ? initial.instancia : instanciaPorFiltro(instanciaFiltro);
-      return { ...initial, instancia };
+      return { ...initial, instancia, dni: initial.dni ?? '' };
     }
     return { ...empty(instanciaFiltro), id: newId(), honorarios: 0, totalCobrado: 0 };
   });
@@ -71,6 +72,10 @@ export default function ModalRegistro({ initial, instanciaFiltro, onSave, onClos
     if (!form.fechaCobro) e.fechaCobro = 'Requerido';
     if (!form.nombreApellido.trim()) e.nombreApellido = 'Requerido';
     if (!form.nroRecibo.trim()) e.nroRecibo = 'Requerido';
+    const dniDigits = parseDNI(form.dni);
+    if (dniDigits && (dniDigits.length < 7 || dniDigits.length > 8)) {
+      e.dni = 'DNI inválido (7 u 8 dígitos)';
+    }
     if (form.cobradoCastillo <= 0) e.cobradoCastillo = 'Debe ser mayor a 0';
     if (form.honorariosPct < 0 || form.honorariosPct > 100) e.honorariosPct = 'Entre 0 y 100';
     setErrors(e);
@@ -119,13 +124,23 @@ export default function ModalRegistro({ initial, instanciaFiltro, onSave, onClos
               placeholder="Ej: 0001"
             />
           </Field>
-          <Field label="Nombre y apellido" error={errors.nombreApellido} full>
+          <Field label="Apellido y nombre" error={errors.nombreApellido} full>
             <input
               type="text"
               value={form.nombreApellido}
               onChange={e => set('nombreApellido', e.target.value)}
               className={inputClass('nombreApellido', errors)}
-              placeholder="Ej: García, Juan"
+              placeholder="Ej: GARCÍA, JUAN"
+            />
+          </Field>
+          <Field label="D.N.I." error={errors.dni}>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={formatDNI(form.dni)}
+              onChange={e => set('dni', parseDNI(e.target.value).slice(0, 8))}
+              className={inputClass('dni', errors)}
+              placeholder="Ej: 31430842"
             />
           </Field>
           <Field label="N° de factura" error={errors.nroFactura}>
@@ -176,7 +191,7 @@ export default function ModalRegistro({ initial, instanciaFiltro, onSave, onClos
               placeholder="0"
             />
           </Field>
-          <Field label="Honorarios" hint="$" computed>
+          <Field label="Honorarios" error="" hint="$" computed>
             <ARNumberInput
               value={form.honorarios}
               onChange={() => {}}
@@ -184,7 +199,7 @@ export default function ModalRegistro({ initial, instanciaFiltro, onSave, onClos
               className={`${readOnlyClass} text-gold-300`}
             />
           </Field>
-          <Field label="Total cobrado" hint="$" computed highlight>
+          <Field label="Total cobrado" error="" hint="$" computed highlight>
             <ARNumberInput
               value={form.totalCobrado}
               onChange={() => {}}

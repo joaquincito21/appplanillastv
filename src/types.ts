@@ -5,6 +5,7 @@ export interface RegistroCobranza {
   fechaCobro: string;
   nroRecibo: string;
   nombreApellido: string;
+  dni: string;
   nroFactura: string;
   instancia: Instancia;
   cobradoCastillo: number;

@@ -51,6 +51,14 @@ export const parseARNumber = (input: string): number => {
 export const filterARInput = (raw: string): string =>
   raw.replace(/[^\d.,]/g, '');
 
+export const formatDNI = (dni: string): string => {
+  const digits = dni.replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+export const parseDNI = (input: string): string => input.replace(/\D/g, '');
+
 export const formatCurrency = (val: number): string =>
   '$ ' + formatARNumber(val, 2);
 

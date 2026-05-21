@@ -1,6 +1,6 @@
 import { Pencil, Trash2, Inbox } from 'lucide-react';
 import { RegistroCobranza } from '../types';
-import { formatARNumber, formatCurrency } from '../utils';
+import { formatARNumber, formatCurrency, formatDNI } from '../utils';
 
 interface Props {
   registros: RegistroCobranza[];
@@ -38,6 +38,7 @@ export default function TablaCobranzas({ registros, onEdit, onDelete }: Props) {
               <th className={th}>Fecha</th>
               <th className={th}>Recibo</th>
               <th className={th}>Nombre</th>
+              <th className={th}>D.N.I.</th>
               <th className={th}>Factura</th>
               <th className={th}>Instancia</th>
               <th className={`${th} text-right`}>Castillo</th>
@@ -63,6 +64,7 @@ export default function TablaCobranzas({ registros, onEdit, onDelete }: Props) {
                 </td>
                 <td className={td}>{r.nroRecibo || '—'}</td>
                 <td className={`${td} font-medium text-white`}>{r.nombreApellido}</td>
+                <td className={td}>{formatDNI(r.dni ?? '') || '—'}</td>
                 <td className={td}>{r.nroFactura || '—'}</td>
                 <td className={td}>
                   <span

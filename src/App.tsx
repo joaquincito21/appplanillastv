@@ -79,6 +79,7 @@ export default function App() {
               totales={totales}
               nroPlanilla={datos.nroPlanilla}
               fechaRendicion={datos.fechaRendicion}
+              instanciaFiltro={datos.instanciaFiltro}
             />
             <button onClick={() => setModal({ open: true })} className="btn-primary">
               <Plus className="w-4 h-4" />
