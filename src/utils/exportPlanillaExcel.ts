@@ -23,8 +23,8 @@ const COLUMNS = [
 ] as const;
 
 const COL_COUNT = COLUMNS.length;
+const MONEY_COLS = new Set([8, 10, 11]);
 
-/** Blanco y negro para impresión; celeste solo en encabezados de columna */
 const COLORS = {
   headerBlue: 'FFB4C7E7',
   white: 'FFFFFFFF',
@@ -44,6 +44,14 @@ const solidFill = (argb: string): ExcelJS.Fill => ({
   type: 'pattern',
   pattern: 'solid',
   fgColor: { argb },
+  bgColor: { argb },
+});
+
+const fontStyle = (bold: boolean): Partial<ExcelJS.Font> => ({
+  name: FONT,
+  size: 10,
+  bold,
+  color: { argb: COLORS.black },
 });
 
 const formatFechaExport = (iso: string): string => {
@@ -74,84 +82,33 @@ const formatPctExport = (value: number): string => {
   return `${n}%`;
 };
 
-const applyBorder = (cell: ExcelJS.Cell) => {
-  cell.border = thinBorder as ExcelJS.Borders;
+const applyCellStyle = (
+  cell: ExcelJS.Cell,
+  opts: {
+    bold?: boolean;
+    fill?: string;
+    align?: 'left' | 'center' | 'right';
+    border?: boolean;
+    fontSize?: number;
+  }
+) => {
+  cell.font = {
+    ...fontStyle(opts.bold ?? false),
+    size: opts.fontSize ?? 10,
+  };
+  if (opts.fill) cell.fill = solidFill(opts.fill);
+  else cell.fill = solidFill(COLORS.white);
+  cell.alignment = {
+    vertical: 'middle',
+    horizontal: opts.align ?? 'left',
+    wrapText: true,
+  };
+  if (opts.border !== false) cell.border = thinBorder as ExcelJS.Borders;
 };
 
 const filtroLabel = (filtro: DatosGenerales['instanciaFiltro']): string => {
   if (filtro === 'Residuales') return 'residuales';
   return 'instancias';
-};
-
-const styleTitleRow = (ws: ExcelJS.Worksheet) => {
-  const row = ws.getRow(1);
-  ws.mergeCells(1, 1, 1, COL_COUNT);
-  const cell = row.getCell(1);
-  cell.value = TITLE;
-  cell.font = { name: FONT, size: 14, bold: true, color: { argb: COLORS.black } };
-  cell.fill = solidFill(COLORS.white);
-  cell.alignment = { vertical: 'middle', horizontal: 'center' };
-  row.height = 28;
-};
-
-const styleMetaRow = (ws: ExcelJS.Worksheet, text: string) => {
-  const row = ws.getRow(4);
-  ws.mergeCells(4, 1, 4, COL_COUNT);
-  const cell = row.getCell(1);
-  cell.value = text;
-  cell.font = { name: FONT, size: 10, bold: true, color: { argb: COLORS.black } };
-  cell.fill = solidFill(COLORS.white);
-  cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-  row.height = 22;
-};
-
-const styleHeaderRow = (row: ExcelJS.Row) => {
-  row.height = 24;
-  row.eachCell({ includeEmpty: true }, (cell, col) => {
-    if (col <= COL_COUNT) {
-      cell.value = COLUMNS[col - 1];
-      cell.font = { name: FONT, size: 10, bold: true, color: { argb: COLORS.black } };
-      cell.fill = solidFill(COLORS.headerBlue);
-      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-      applyBorder(cell);
-    }
-  });
-};
-
-const styleDataRow = (row: ExcelJS.Row) => {
-  row.height = 18;
-  row.eachCell({ includeEmpty: true }, (cell, col) => {
-    if (col <= COL_COUNT) {
-      const isMoney = col >= 8 && col <= 11;
-      const isCenter = col === 1 || col === 7;
-      cell.font = { name: FONT, size: 10, bold: false, color: { argb: COLORS.black } };
-      cell.fill = solidFill(COLORS.white);
-      cell.alignment = {
-        vertical: 'middle',
-        horizontal: isMoney ? 'right' : isCenter ? 'center' : 'left',
-        wrapText: col === 13,
-      };
-      applyBorder(cell);
-    }
-  });
-};
-
-const styleTotalRow = (row: ExcelJS.Row, label: string, value: string) => {
-  const labelCol = 7;
-  const valueCol = 8;
-  row.height = 20;
-
-  const labelCell = row.getCell(labelCol);
-  labelCell.value = label;
-  labelCell.font = { name: FONT, size: 11, bold: true, color: { argb: COLORS.black } };
-  labelCell.fill = solidFill(COLORS.white);
-  labelCell.alignment = { vertical: 'middle', horizontal: 'right' };
-
-  const valueCell = row.getCell(valueCol);
-  valueCell.value = value;
-  valueCell.font = { name: FONT, size: 11, bold: true, color: { argb: COLORS.black } };
-  valueCell.fill = solidFill(COLORS.white);
-  valueCell.alignment = { vertical: 'middle', horizontal: 'right' };
 };
 
 export async function exportPlanillaExcel(
@@ -170,69 +127,99 @@ export async function exportPlanillaExcel(
   });
 
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Castillo Planillas';
   const sheetName = instanciaFiltro === 'Residuales' ? 'Residuales' : 'Instancias';
   const ws = wb.addWorksheet(sheetName, {
     views: [{ showGridLines: true }],
-    pageSetup: {
-      orientation: 'landscape',
-      fitToPage: true,
-      fitToWidth: 1,
-    },
+    pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1 },
   });
 
-  ws.columns = [
-    { width: 6 },
-    { width: 14 },
-    { width: 12 },
-    { width: 30 },
-    { width: 14 },
-    { width: 14 },
-    { width: 12 },
-    { width: 18 },
-    { width: 10 },
-    { width: 14 },
-    { width: 16 },
-    { width: 16 },
-    { width: 38 },
-  ];
+  [6, 14, 12, 30, 14, 14, 12, 18, 10, 14, 16, 16, 38].forEach((w, i) => {
+    ws.getColumn(i + 1).width = w;
+  });
 
-  styleTitleRow(ws);
-  ws.getRow(2).height = 4;
-  ws.getRow(3).height = 4;
+  // Fila 1 — Título
+  ws.mergeCells(1, 1, 1, COL_COUNT);
+  const titleCell = ws.getCell(1, 1);
+  titleCell.value = TITLE;
+  applyCellStyle(titleCell, { bold: true, align: 'center', border: false, fontSize: 14 });
+  ws.getRow(1).height = 28;
 
-  const metaText = `${ESTUDIO}   ${PROVINCIA}   FECHA: ${formatFechaRendicion(fechaRendicion)}${
+  ws.getRow(2).height = 6;
+  ws.getRow(3).height = 6;
+
+  // Fila 4 — Estudio / provincia / fecha
+  ws.mergeCells(4, 1, 4, COL_COUNT);
+  const metaCell = ws.getCell(4, 1);
+  metaCell.value = `${ESTUDIO}   ${PROVINCIA}   FECHA: ${formatFechaRendicion(fechaRendicion)}${
     nroPlanilla ? `   PLANILLA N°: ${nroPlanilla}` : ''
   }`;
-  styleMetaRow(ws, metaText);
+  applyCellStyle(metaCell, { bold: true, border: false });
+  ws.getRow(4).height = 22;
 
-  const headerRowNum = 5;
-  styleHeaderRow(ws.getRow(headerRowNum));
+  // Fila 5 — Encabezados de columna (celeste + negrita)
+  const headerRow = ws.getRow(5);
+  headerRow.height = 26;
+  for (let col = 1; col <= COL_COUNT; col++) {
+    const cell = headerRow.getCell(col);
+    cell.value = COLUMNS[col - 1];
+    applyCellStyle(cell, {
+      bold: true,
+      fill: COLORS.headerBlue,
+      align: 'center',
+    });
+  }
 
-  let rowNum = headerRowNum + 1;
+  // Filas de datos
+  let rowNum = 6;
   ordenados.forEach((r, i) => {
     const row = ws.getRow(rowNum);
-    row.getCell(1).value = i + 1;
-    row.getCell(2).value = formatFechaExport(r.fechaCobro);
-    row.getCell(3).value = r.nroRecibo;
-    row.getCell(4).value = (r.nombreApellido || '').toUpperCase();
-    row.getCell(5).value = formatDNI(r.dni ?? '');
-    row.getCell(6).value = (r.nroFactura || 'TODAS').toUpperCase();
-    row.getCell(7).value = formatInstanciaExport(r.instancia);
-    row.getCell(8).value = formatCurrencyExport(r.cobradoCastillo);
-    row.getCell(9).value = formatPctExport(r.honorariosPct);
-    row.getCell(10).value = formatCurrencyExport(r.honorarios);
-    row.getCell(11).value = formatCurrencyExport(r.totalCobrado);
-    row.getCell(12).value = (r.cuotasPagar || '').toUpperCase();
-    row.getCell(13).value = (r.observacion || '').toUpperCase();
-    styleDataRow(row);
+    row.height = 18;
+
+    const values: (string | number)[] = [
+      i + 1,
+      formatFechaExport(r.fechaCobro),
+      r.nroRecibo,
+      (r.nombreApellido || '').toUpperCase(),
+      formatDNI(r.dni ?? ''),
+      (r.nroFactura || 'TODAS').toUpperCase(),
+      formatInstanciaExport(r.instancia),
+      formatCurrencyExport(r.cobradoCastillo),
+      formatPctExport(r.honorariosPct),
+      formatCurrencyExport(r.honorarios),
+      formatCurrencyExport(r.totalCobrado),
+      (r.cuotasPagar || '').toUpperCase(),
+      (r.observacion || '').toUpperCase(),
+    ];
+
+    values.forEach((val, idx) => {
+      const col = idx + 1;
+      const cell = row.getCell(col);
+      cell.value = val;
+      const isMoney = MONEY_COLS.has(col);
+      const align =
+        isMoney || col === 9 ? 'right' : col === 1 || col === 7 ? 'center' : 'left';
+      applyCellStyle(cell, { bold: isMoney, align });
+    });
+
     rowNum++;
   });
 
+  // Totales
   rowNum += 1;
-  styleTotalRow(ws.getRow(rowNum), 'TOTAL CASTILLO:', formatCurrencyExport(totales.totalCastillo));
+  const totalCastilloRow = ws.getRow(rowNum);
+  totalCastilloRow.height = 20;
+  applyCellStyle(totalCastilloRow.getCell(7), { bold: true, align: 'right', border: false });
+  totalCastilloRow.getCell(7).value = 'TOTAL CASTILLO:';
+  applyCellStyle(totalCastilloRow.getCell(8), { bold: true, align: 'right', border: false });
+  totalCastilloRow.getCell(8).value = formatCurrencyExport(totales.totalCastillo);
+
   rowNum++;
-  styleTotalRow(ws.getRow(rowNum), 'TOTAL HONORARIO:', formatCurrencyExport(totales.totalHonorarios));
+  const totalHonorRow = ws.getRow(rowNum);
+  totalHonorRow.height = 20;
+  applyCellStyle(totalHonorRow.getCell(7), { bold: true, align: 'right', border: false });
+  totalHonorRow.getCell(7).value = 'TOTAL HONORARIO:';
+  applyCellStyle(totalHonorRow.getCell(8), { bold: true, align: 'right', border: false });
+  totalHonorRow.getCell(8).value = formatCurrencyExport(totales.totalHonorarios);
 
   const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -241,8 +228,7 @@ export async function exportPlanillaExcel(
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  const fecha = fechaRendicion || 'sin_fecha';
-  a.download = `planilla_rendicion_${filtroLabel(instanciaFiltro)}_${fecha}.xlsx`;
+  a.download = `planilla_rendicion_${filtroLabel(instanciaFiltro)}_${fechaRendicion || 'sin_fecha'}.xlsx`;
   a.click();
   URL.revokeObjectURL(url);
 }
