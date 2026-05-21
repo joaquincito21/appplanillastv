@@ -23,18 +23,28 @@ const COLUMNS = [
 ] as const;
 
 const COL_COUNT = COLUMNS.length;
-const HEADER_FILL: ExcelJS.Fill = {
-  type: 'pattern',
-  pattern: 'solid',
-  fgColor: { argb: 'FFB4C7E7' },
+
+/** Blanco y negro para impresión; celeste solo en encabezados de columna */
+const COLORS = {
+  headerBlue: 'FFB4C7E7',
+  white: 'FFFFFFFF',
+  black: 'FF000000',
 };
 
+const FONT = 'Calibri';
+
 const thinBorder: Partial<ExcelJS.Borders> = {
-  top: { style: 'thin', color: { argb: 'FF000000' } },
-  left: { style: 'thin', color: { argb: 'FF000000' } },
-  bottom: { style: 'thin', color: { argb: 'FF000000' } },
-  right: { style: 'thin', color: { argb: 'FF000000' } },
+  top: { style: 'thin', color: { argb: COLORS.black } },
+  left: { style: 'thin', color: { argb: COLORS.black } },
+  bottom: { style: 'thin', color: { argb: COLORS.black } },
+  right: { style: 'thin', color: { argb: COLORS.black } },
 };
+
+const solidFill = (argb: string): ExcelJS.Fill => ({
+  type: 'pattern',
+  pattern: 'solid',
+  fgColor: { argb },
+});
 
 const formatFechaExport = (iso: string): string => {
   if (!iso) return '';
@@ -68,13 +78,40 @@ const applyBorder = (cell: ExcelJS.Cell) => {
   cell.border = thinBorder as ExcelJS.Borders;
 };
 
-const styleHeaderRow = (row: ExcelJS.Row) => {
+const filtroLabel = (filtro: DatosGenerales['instanciaFiltro']): string => {
+  if (filtro === 'Residuales') return 'residuales';
+  return 'instancias';
+};
+
+const styleTitleRow = (ws: ExcelJS.Worksheet) => {
+  const row = ws.getRow(1);
+  ws.mergeCells(1, 1, 1, COL_COUNT);
+  const cell = row.getCell(1);
+  cell.value = TITLE;
+  cell.font = { name: FONT, size: 14, bold: true, color: { argb: COLORS.black } };
+  cell.fill = solidFill(COLORS.white);
+  cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  row.height = 28;
+};
+
+const styleMetaRow = (ws: ExcelJS.Worksheet, text: string) => {
+  const row = ws.getRow(4);
+  ws.mergeCells(4, 1, 4, COL_COUNT);
+  const cell = row.getCell(1);
+  cell.value = text;
+  cell.font = { name: FONT, size: 10, bold: true, color: { argb: COLORS.black } };
+  cell.fill = solidFill(COLORS.white);
+  cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
   row.height = 22;
+};
+
+const styleHeaderRow = (row: ExcelJS.Row) => {
+  row.height = 24;
   row.eachCell({ includeEmpty: true }, (cell, col) => {
     if (col <= COL_COUNT) {
       cell.value = COLUMNS[col - 1];
-      cell.font = { bold: true, size: 10, name: 'Arial' };
-      cell.fill = HEADER_FILL;
+      cell.font = { name: FONT, size: 10, bold: true, color: { argb: COLORS.black } };
+      cell.fill = solidFill(COLORS.headerBlue);
       cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
       applyBorder(cell);
     }
@@ -82,12 +119,16 @@ const styleHeaderRow = (row: ExcelJS.Row) => {
 };
 
 const styleDataRow = (row: ExcelJS.Row) => {
+  row.height = 18;
   row.eachCell({ includeEmpty: true }, (cell, col) => {
     if (col <= COL_COUNT) {
-      cell.font = { size: 10, name: 'Arial' };
+      const isMoney = col >= 8 && col <= 11;
+      const isCenter = col === 1 || col === 7;
+      cell.font = { name: FONT, size: 10, bold: false, color: { argb: COLORS.black } };
+      cell.fill = solidFill(COLORS.white);
       cell.alignment = {
         vertical: 'middle',
-        horizontal: col >= 8 && col <= 11 ? 'right' : 'left',
+        horizontal: isMoney ? 'right' : isCenter ? 'center' : 'left',
         wrapText: col === 13,
       };
       applyBorder(cell);
@@ -95,11 +136,22 @@ const styleDataRow = (row: ExcelJS.Row) => {
   });
 };
 
-const filtroLabel = (filtro: DatosGenerales['instanciaFiltro']): string => {
-  if (filtro === 'todas') return 'todas';
-  if (filtro === 'Residuales') return 'residuales';
-  if (filtro === '1° Instancia') return '1_instancia';
-  return '2_instancia';
+const styleTotalRow = (row: ExcelJS.Row, label: string, value: string) => {
+  const labelCol = 7;
+  const valueCol = 8;
+  row.height = 20;
+
+  const labelCell = row.getCell(labelCol);
+  labelCell.value = label;
+  labelCell.font = { name: FONT, size: 11, bold: true, color: { argb: COLORS.black } };
+  labelCell.fill = solidFill(COLORS.white);
+  labelCell.alignment = { vertical: 'middle', horizontal: 'right' };
+
+  const valueCell = row.getCell(valueCol);
+  valueCell.value = value;
+  valueCell.font = { name: FONT, size: 11, bold: true, color: { argb: COLORS.black } };
+  valueCell.fill = solidFill(COLORS.white);
+  valueCell.alignment = { vertical: 'middle', horizontal: 'right' };
 };
 
 export async function exportPlanillaExcel(
@@ -109,18 +161,31 @@ export async function exportPlanillaExcel(
   fechaRendicion: string,
   instanciaFiltro: DatosGenerales['instanciaFiltro']
 ): Promise<void> {
+  const ordenados = [...registros].sort((a, b) => {
+    const order = (i: Instancia) =>
+      i === '1° Instancia' ? 0 : i === '2° Instancia' ? 1 : 2;
+    const diff = order(a.instancia) - order(b.instancia);
+    if (diff !== 0) return diff;
+    return (a.fechaCobro || '').localeCompare(b.fechaCobro || '');
+  });
+
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Castillo Planillas';
-  const ws = wb.addWorksheet('Planilla', {
+  const sheetName = instanciaFiltro === 'Residuales' ? 'Residuales' : 'Instancias';
+  const ws = wb.addWorksheet(sheetName, {
     views: [{ showGridLines: true }],
-    pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1 },
+    pageSetup: {
+      orientation: 'landscape',
+      fitToPage: true,
+      fitToWidth: 1,
+    },
   });
 
   ws.columns = [
     { width: 6 },
     { width: 14 },
     { width: 12 },
-    { width: 28 },
+    { width: 30 },
     { width: 14 },
     { width: 14 },
     { width: 12 },
@@ -129,35 +194,23 @@ export async function exportPlanillaExcel(
     { width: 14 },
     { width: 16 },
     { width: 16 },
-    { width: 36 },
+    { width: 38 },
   ];
 
-  const titleRow = ws.getRow(1);
-  ws.mergeCells(1, 1, 1, COL_COUNT);
-  const titleCell = titleRow.getCell(1);
-  titleCell.value = TITLE;
-  titleCell.font = { bold: true, size: 12, name: 'Arial' };
-  titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
-  titleRow.height = 24;
+  styleTitleRow(ws);
+  ws.getRow(2).height = 4;
+  ws.getRow(3).height = 4;
 
-  ws.getRow(2).height = 6;
-  ws.getRow(3).height = 6;
-
-  const metaRow = ws.getRow(4);
-  ws.mergeCells(4, 1, 4, COL_COUNT);
-  const metaCell = metaRow.getCell(1);
-  metaCell.value = `${ESTUDIO}   ${PROVINCIA}   FECHA: ${formatFechaRendicion(fechaRendicion)}${
+  const metaText = `${ESTUDIO}   ${PROVINCIA}   FECHA: ${formatFechaRendicion(fechaRendicion)}${
     nroPlanilla ? `   PLANILLA N°: ${nroPlanilla}` : ''
   }`;
-  metaCell.font = { bold: true, size: 10, name: 'Arial' };
-  metaCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-  metaRow.height = 20;
+  styleMetaRow(ws, metaText);
 
   const headerRowNum = 5;
   styleHeaderRow(ws.getRow(headerRowNum));
 
   let rowNum = headerRowNum + 1;
-  registros.forEach((r, i) => {
+  ordenados.forEach((r, i) => {
     const row = ws.getRow(rowNum);
     row.getCell(1).value = i + 1;
     row.getCell(2).value = formatFechaExport(r.fechaCobro);
@@ -177,22 +230,9 @@ export async function exportPlanillaExcel(
   });
 
   rowNum += 1;
-  const totalCastilloRow = ws.getRow(rowNum);
-  const labelCol = 7;
-  const valueCol = 8;
-  totalCastilloRow.getCell(labelCol).value = 'TOTAL CASTILLO:';
-  totalCastilloRow.getCell(labelCol).font = { bold: true, size: 10, name: 'Arial' };
-  totalCastilloRow.getCell(valueCol).value = formatCurrencyExport(totales.totalCastillo);
-  totalCastilloRow.getCell(valueCol).font = { bold: true, size: 10, name: 'Arial' };
-  totalCastilloRow.getCell(valueCol).alignment = { horizontal: 'right' };
-
+  styleTotalRow(ws.getRow(rowNum), 'TOTAL CASTILLO:', formatCurrencyExport(totales.totalCastillo));
   rowNum++;
-  const totalHonorRow = ws.getRow(rowNum);
-  totalHonorRow.getCell(labelCol).value = 'TOTAL HONORARIO:';
-  totalHonorRow.getCell(labelCol).font = { bold: true, size: 10, name: 'Arial' };
-  totalHonorRow.getCell(valueCol).value = formatCurrencyExport(totales.totalHonorarios);
-  totalHonorRow.getCell(valueCol).font = { bold: true, size: 10, name: 'Arial' };
-  totalHonorRow.getCell(valueCol).alignment = { horizontal: 'right' };
+  styleTotalRow(ws.getRow(rowNum), 'TOTAL HONORARIO:', formatCurrencyExport(totales.totalHonorarios));
 
   const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], {

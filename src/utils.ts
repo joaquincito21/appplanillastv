@@ -1,4 +1,4 @@
-import { RegistroCobranza, Totales } from './types';
+import { RegistroCobranza, Totales, DatosGenerales } from './types';
 
 /** Formato argentino: miles con punto, decimales con coma (ej. 100.000,00) */
 export const formatARNumber = (value: number, decimals = 2): string => {
@@ -63,6 +63,19 @@ export const formatCurrency = (val: number): string =>
   '$ ' + formatARNumber(val, 2);
 
 export const parseCurrency = parseARNumber;
+
+/** Registros que van al Excel según la pestaña activa */
+export const getRegistrosParaExport = (
+  registros: RegistroCobranza[],
+  filtro: DatosGenerales['instanciaFiltro']
+): RegistroCobranza[] => {
+  if (filtro === 'Residuales') {
+    return registros.filter(r => r.instancia === 'Residuales');
+  }
+  return registros.filter(
+    r => r.instancia === '1° Instancia' || r.instancia === '2° Instancia'
+  );
+};
 
 export const calcTotales = (registros: RegistroCobranza[]): Totales => ({
   totalCastillo: registros.reduce((s, r) => s + r.cobradoCastillo, 0),

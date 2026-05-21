@@ -75,8 +75,7 @@ export default function App() {
           />
           <div className="flex flex-wrap gap-2">
             <ExportButton
-              registros={filtrados}
-              totales={totales}
+              registros={registros}
               nroPlanilla={datos.nroPlanilla}
               fechaRendicion={datos.fechaRendicion}
               instanciaFiltro={datos.instanciaFiltro}
